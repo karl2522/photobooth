@@ -11,8 +11,8 @@ type Filter = { id: string; name: string; class: string }
 
 type CameraPageProps = {
 	onBack?: () => void
-	videoRef: React.RefObject<HTMLVideoElement>
-	canvasRef: React.RefObject<HTMLCanvasElement>
+	videoRef: React.RefObject<HTMLVideoElement | null>
+	canvasRef: React.RefObject<HTMLCanvasElement | null>
 	isCameraReady: boolean
 	isLoading: boolean
 	isCapturing: boolean
