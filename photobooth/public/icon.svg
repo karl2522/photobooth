@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="100%" stop-color="#fb7185"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fecdd3"/>
+      <stop offset="100%" stop-color="#fbcfe8"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#g2)"/>
+  <!-- Heart camera badge -->
+  <g transform="translate(72 76) scale(0.85)">
+    <path d="M256 118c-20-36-68-48-100-18-36-30-84-14-100 22-24 54 44 114 100 154 56-40 126-100 100-158z" fill="url(#g1)"/>
+  </g>
+  <!-- Camera body -->
+  <g transform="translate(120 160)">
+    <rect x="0" y="24" width="272" height="192" rx="28" fill="#ffffff" opacity="0.85"/>
+    <rect x="16" y="40" width="240" height="160" rx="20" fill="#ffffff" opacity="0.9" stroke="#f5a5c4" stroke-width="6"/>
+    <circle cx="136" cy="120" r="52" fill="url(#g1)" opacity="0.9"/>
+    <circle cx="136" cy="120" r="28" fill="#ffffff" opacity="0.95"/>
+    <rect x="28" y="8" width="72" height="20" rx="10" fill="url(#g1)"/>
+    <circle cx="232" cy="20" r="10" fill="#fda4af"/>
+  </g>
+  <!-- Sparkles -->
+  <g fill="#f9a8d4">
+    <path d="M84 96l6 14 14 6-14 6-6 14-6-14-14-6 14-6 6-14z"/>
+    <path d="M436 114l5 12 12 5-12 5-5 12-5-12-12-5 12-5 5-12z"/>
+    <path d="M420 410l4 10 10 4-10 4-4 10-4-10-10-4 10-4 4-10z"/>
+  </g>
+</svg>
