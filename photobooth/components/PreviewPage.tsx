@@ -112,7 +112,7 @@ import * as React from 'react'
 								{/* Strip preview (left) */}
 								<div className="flex items-start justify-start min-h-0">
 									{/* Scroll container: show up to ~4 photos, rest scroll; scrollbar hidden */}
-									<div className="relative w-[250px] max-h-[72vh] overflow-y-auto scrollbar-hide">
+									<div className="relative w-[250px] max-h-[60vh] md:max-h-[68vh] lg:max-h-[72vh] overflow-y-auto scrollbar-hide overscroll-contain">
 										<div className="relative">
 											<KonvaPreview
 												images={capturedImages}

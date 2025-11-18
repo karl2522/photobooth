@@ -1,12 +1,12 @@
 'use client'
 
-import * as React from 'react'
-import { Camera, Sparkles, ArrowLeft, ArrowRight, Heart, ChevronDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import DecorBackground from '@/components/DecorBackground'
 import DraggableDecor from '@/components/DraggableDecor'
 import SectionCard from '@/components/SectionCard'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { ArrowLeft, ArrowRight, Camera, ChevronDown, Sparkles } from 'lucide-react'
+import * as React from 'react'
 
 type Filter = { id: string; name: string; class: string }
 
@@ -70,6 +70,57 @@ export default function CameraPage(props: CameraPageProps) {
 	const preventClickUntilRef = React.useRef(0)
 	const startXRef = React.useRef(0)
 	const scrollLeftRef = React.useRef(0)
+
+	// Track which images are currently animating
+	const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set())
+	const prevImagesLengthRef = React.useRef(0)
+	const animationTimeoutRef = React.useRef<Map<number, NodeJS.Timeout>>(new Map())
+	const thumbnailContainerRef = React.useRef<HTMLDivElement>(null)
+	const cameraContainerRef = React.useRef<HTMLDivElement>(null)
+	const animationKeysRef = React.useRef<Map<number, string>>(new Map())
+
+	React.useEffect(() => {
+		if (capturedImages.length > prevImagesLengthRef.current) {
+			// New images were added - start animation for newest ones
+			const newIndices: number[] = []
+			for (let i = prevImagesLengthRef.current; i < capturedImages.length; i++) {
+				newIndices.push(i)
+				// Create a stable unique key for this animation instance
+				animationKeysRef.current.set(i, `popout-${i}-${Date.now()}`)
+			}
+			
+			// Mark as animating
+			setAnimatingIndices(prev => new Set([...prev, ...newIndices]))
+			
+			// After animation completes, remove from animating set
+			newIndices.forEach(index => {
+				const timeout = setTimeout(() => {
+					setAnimatingIndices(prev => {
+						const next = new Set(prev)
+						next.delete(index)
+						return next
+					})
+					animationTimeoutRef.current.delete(index)
+					// Keep the key for this index so it doesn't re-animate on re-render
+				}, 1400) // Match animation duration
+				animationTimeoutRef.current.set(index, timeout)
+			})
+			
+			prevImagesLengthRef.current = capturedImages.length
+		} else if (capturedImages.length === 0) {
+			// Images were cleared - cleanup
+			animationTimeoutRef.current.forEach(timeout => clearTimeout(timeout))
+			animationTimeoutRef.current.clear()
+			animationKeysRef.current.clear()
+			setAnimatingIndices(new Set())
+			prevImagesLengthRef.current = 0
+		}
+		
+		return () => {
+			// Cleanup timeouts on unmount
+			animationTimeoutRef.current.forEach(timeout => clearTimeout(timeout))
+		}
+	}, [capturedImages])
 
 	const onFiltersPointerDown = (e: React.PointerEvent) => {
 		if (!filterScrollRef.current) return
@@ -165,8 +216,15 @@ export default function CameraPage(props: CameraPageProps) {
 					</div>
 				)}
 
-				<div className="w-full max-w-3xl flex-1 min-h-0 flex items-center justify-center">
-					<div className="relative w-full max-h-[45vh] md:max-h-[50vh] aspect-video">
+				<div className="w-full max-w-5xl flex-1 min-h-0 pt-4 mx-auto relative">
+					{/* 3-column grid layout: spacer left, camera center, thumbnails right - ensures perfect centering */}
+					<div className="grid grid-cols-1 md:grid-cols-[80px_1fr_80px] gap-4 items-start">
+						{/* Left spacer column - balances the layout so camera stays centered */}
+						<div className="hidden md:block w-20 flex-shrink-0" />
+
+						{/* Camera column - camera centered within this column */}
+						<div className="flex justify-center min-w-0">
+							<div className="relative w-full max-w-3xl max-h-[45vh] md:max-h-[50vh] aspect-video" id="camera-container">
 						{/* Gradient border wrapper for camera view */}
 						<div className="p-[1.5px] rounded-3xl bg-gradient-to-br from-pink-300/60 to-rose-300/60 shadow-2xl shadow-pink-200/50">
 							<div className="relative bg-white/80 backdrop-blur-md rounded-3xl p-4 md:p-6 border border-pink-100/50 h-full flex flex-col animate-float-up">
@@ -220,11 +278,88 @@ export default function CameraPage(props: CameraPageProps) {
 						</div>
 
 						<canvas ref={canvasRef} className="hidden" />
+							</div>
+						</div>
+
+						{/* Thumbnails column - right side */}
+						<div className="hidden md:block w-20 flex-shrink-0">
+							{capturedImages.length > 0 ? (
+								<div ref={thumbnailContainerRef} className="flex flex-col gap-2 w-full">
+									{capturedImages.map((image, index) => {
+										const isAnimating = animatingIndices.has(index)
+										// Hide during animation, show after
+										return (
+											<div
+												key={`thumb-${index}-${capturedImages.length}`}
+												className={cn(
+													"relative w-20 h-[60px] bg-white shadow-lg overflow-hidden",
+													isAnimating && "opacity-0"
+												)}
+											>
+												<img
+													src={image}
+													alt={`Photo ${index + 1}`}
+													className="w-full h-full object-contain"
+												/>
+											</div>
+										)
+									})}
+								</div>
+							) : (
+								// Empty placeholder to maintain grid structure if needed, though the column itself does that
+								<div className="w-full" />
+							)}
+						</div>
 					</div>
+
+					{/* Animated photo overlay - appears at center and moves to side */}
+					{capturedImages.map((image, index) => {
+						const isAnimating = animatingIndices.has(index)
+						if (!isAnimating) return null
+						
+						// Calculate target position - thumbnails are 60px tall (landscape 4:3) with 8px gap
+						// First image (index 0) goes to top, subsequent images stack below
+						const thumbnailHeight = 60
+						const gap = 8
+						// Target Y is the center point of each thumbnail
+						// First thumbnail starts at top (index 0 = 30px center)
+						const containerPadding = 16 // pt-4 = 16px
+						const targetY = containerPadding + index * (thumbnailHeight + gap) + thumbnailHeight / 2
+						
+						// Use stable key from ref to prevent re-animation on re-render
+						const animationKey = animationKeysRef.current.get(index) || `popout-${index}`
+						
+						// Calculate target X: 
+						// Container is relative. Grid is centered.
+						// Right column is 80px wide.
+						// Target center is -40px from the right edge (100%).
+						const targetX = 'calc(100% - 40px)'
+						
+						return (
+							<div
+								key={animationKey}
+								className="hidden md:block absolute photo-pop-out-overlay"
+								style={{
+									'--target-x': targetX,
+									'--target-y': `${targetY}px`,
+									'--start-y': '50%', // Always start from camera center
+								} as React.CSSProperties}
+							>
+								<div className="w-20 h-[60px] bg-white shadow-lg overflow-hidden">
+									<img
+										src={image}
+										alt={`Photo ${index + 1}`}
+										className="w-full h-full object-contain"
+									/>
+								</div>
+							</div>
+						)
+					})}
+
 				</div>
 
 				{isCameraReady && (
-					<div className="w-full max-w-3xl">
+					<div className="w-full max-w-3xl mx-auto">
 						<div className="bg-white/80 backdrop-blur-md rounded-2xl p-3 md:p-4 border border-pink-100/50 shadow-lg animate-float-up">
 							<div className="flex items-center gap-2 mb-3">
 								<Sparkles className="w-4 h-4 text-pink-400" />
@@ -260,7 +395,7 @@ export default function CameraPage(props: CameraPageProps) {
 				)}
 
 				{isCameraReady && (
-					<div className="w-full max-w-3xl space-y-3">
+					<div className="w-full max-w-3xl mx-auto space-y-3">
 						<div className="flex flex-wrap items-center justify-center gap-3">
 							{capturedImages.length === 0 ? (
 								<Button

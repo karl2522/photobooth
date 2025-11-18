@@ -145,7 +145,12 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
                     context.filter = 'none'
             }
 
+            // Flip horizontally to match camera view (which uses -scale-x-100)
+            context.save()
+            context.translate(canvas.width, 0)
+            context.scale(-1, 1)
             context.drawImage(video, 0, 0, canvas.width, canvas.height)
+            context.restore()
             // trigger a subtle shutter flash after capture
             setShutterActive(true)
             setTimeout(() => setShutterActive(false), 180)
@@ -495,11 +500,38 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         })
     }, [capturedImages, selectedFrameColor, selectedSticker])
 
+    // Track previous view to detect when returning from preview
+    const prevViewRef = useRef<'capture' | 'preview'>('capture')
+
     const retakePhotos = useCallback(() => {
         setCapturedImages([])
         setView('capture')
         setCurrentPhotoIndex(0)
     }, [])
+
+    // Only handle camera reattachment when returning from preview view
+    useEffect(() => {
+        const prevView = prevViewRef.current
+        prevViewRef.current = view
+
+        // Only act when switching FROM preview TO capture (retake scenario)
+        if (prevView === 'preview' && view === 'capture' && videoRef.current) {
+            // If we have an existing active stream, reattach it to the video element
+            if (stream && stream.active) {
+                if (videoRef.current.srcObject !== stream) {
+                    videoRef.current.srcObject = stream
+                    videoRef.current.play().catch(console.error)
+                }
+                // Ensure camera ready state is set if stream is active
+                if (!isCameraReady) {
+                    setIsCameraReady(true)
+                }
+            } else if (!isLoading) {
+                // Stream was stopped or doesn't exist, restart camera
+                startCamera()
+            }
+        }
+    }, [view, stream, isCameraReady, isLoading, startCamera])
 
     useEffect(() => {
         return () => {

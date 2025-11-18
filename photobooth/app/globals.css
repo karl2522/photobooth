@@ -420,4 +420,64 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Photo pop-out animation - starts at camera center, pops, then smoothly moves to its actual position */
+  @keyframes photo-pop-out-overlay {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.4);
+      left: 50%;
+      top: var(--start-y, 50%);
+    }
+    10% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.4);
+      left: 50%;
+      top: var(--start-y, 50%);
+    }
+    20% {
+      transform: translate(-50%, -50%) scale(1.2);
+      left: 50%;
+      top: var(--start-y, 50%);
+    }
+    30% {
+      transform: translate(-50%, -50%) scale(1.1);
+      left: 50%;
+      top: var(--start-y, 50%);
+    }
+    35% {
+      transform: translate(-50%, -50%) scale(1.05);
+      left: 50%;
+      top: var(--start-y, 50%);
+    }
+    75% {
+      transform: translate(-50%, -50%) scale(1);
+      left: var(--target-x);
+      top: var(--target-y);
+    }
+    88% {
+      transform: translate(-50%, -50%) scale(0.98);
+      left: var(--target-x);
+      top: var(--target-y);
+    }
+    96% {
+      transform: translate(-50%, -50%) scale(1.01);
+      left: var(--target-x);
+      top: var(--target-y);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1);
+      left: var(--target-x);
+      top: var(--target-y);
+    }
+  }
+
+  .photo-pop-out-overlay {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    animation: photo-pop-out-overlay 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
 }
