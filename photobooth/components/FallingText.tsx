@@ -62,7 +62,6 @@ export default function FallingText() {
 						fontSize: `${d.fontSizeRem}rem`,
 						fontWeight: 700,
 						opacity: 0.85,
-						// @ts-expect-error css var
 						'--tw-rotate': `${d.rotateDeg}deg`,
 						background: `linear-gradient(180deg, ${d.gradient[0]}, ${d.gradient[1]})`,
 						WebkitBackgroundClip: 'text',
