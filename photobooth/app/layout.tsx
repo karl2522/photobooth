@@ -13,10 +13,29 @@ export const metadata: Metadata = {
     title: "Theresa's Photobooth ♡",
     description: 'A modern, minimal pink-themed photobooth to capture and cherish your beautiful moments',
     generator: 'v0.app',
+    manifest: '/manifest.json',
     icons: {
         icon: '/icon.svg',
         shortcut: '/icon.svg',
         apple: '/icon.svg',
+    },
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: 'default',
+        title: "Theresa's Photobooth",
+    },
+    viewport: {
+        width: 'device-width',
+        initialScale: 1,
+        maximumScale: 1,
+        userScalable: false,
+        viewportFit: 'cover',
+    },
+    other: {
+        'mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+        'apple-mobile-web-app-title': "Theresa's Photobooth",
     },
 }
 

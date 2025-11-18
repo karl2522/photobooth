@@ -1,0 +1,19 @@
+{
+  "name": "Theresa's Photobooth",
+  "short_name": "Photobooth",
+  "description": "A modern, minimal pink-themed photobooth to capture and cherish your beautiful moments",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fce7f3",
+  "theme_color": "#ec4899",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
