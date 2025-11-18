@@ -414,17 +414,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
 
                 ctx.drawImage(img, sx, sy, sw, sh, x, y, photoWidth, photoHeight)
 
-                if (selectedSticker !== 'none') {
-                    const sticker = STICKERS.find(s => s.id === selectedSticker)
-                    if (sticker && sticker.emoji) {
-                        const stickerFont = Math.round(18 * scale)
-                        ctx.font = `${stickerFont}px sans-serif`
-                        ctx.fillText(sticker.emoji, x + Math.round(8 * scale), y + Math.round(24 * scale))
-                        ctx.fillText(sticker.emoji, x + photoWidth - Math.round(20 * scale), y + Math.round(24 * scale))
-                        ctx.fillText(sticker.emoji, x + Math.round(8 * scale), y + photoHeight - Math.round(6 * scale))
-                        ctx.fillText(sticker.emoji, x + photoWidth - Math.round(20 * scale), y + photoHeight - Math.round(6 * scale))
-                    }
-                }
+                // emoji-based fallback removed; using SVG-based border stickers only
 
                 if (loadedCount === images.length) {
                     // Footer background matches frame color
