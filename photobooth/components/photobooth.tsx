@@ -19,7 +19,7 @@ const FILTERS = [
     { id: 'cinematic', name: 'Cinematic', class: 'contrast-[1.3] saturate-[0.9] brightness-[0.9]' },
 ]
 
-const PHOTO_COUNTS = [2, 4, 6]
+const PHOTO_COUNTS = [2, 3, 4]
 const COUNTDOWN_OPTIONS = [3, 5, 10]
 
 const FRAME_COLORS = [
