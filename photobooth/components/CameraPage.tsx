@@ -5,6 +5,7 @@ import { Camera, Sparkles, ArrowLeft, ArrowRight, Heart, ChevronDown } from 'luc
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import DecorBackground from '@/components/DecorBackground'
+import DraggableDecor from '@/components/DraggableDecor'
 import SectionCard from '@/components/SectionCard'
 
 type Filter = { id: string; name: string; class: string }
@@ -14,6 +15,7 @@ type CameraPageProps = {
 	videoRef: React.RefObject<HTMLVideoElement | null>
 	canvasRef: React.RefObject<HTMLCanvasElement | null>
 	isCameraReady: boolean
+	shutterActive?: boolean
 	isLoading: boolean
 	isCapturing: boolean
 	countdown: number | null
@@ -40,6 +42,7 @@ export default function CameraPage(props: CameraPageProps) {
 		videoRef,
 		canvasRef,
 		isCameraReady,
+		shutterActive = false,
 		isLoading,
 		isCapturing,
 		countdown,
@@ -60,6 +63,43 @@ export default function CameraPage(props: CameraPageProps) {
 		countdownOptions,
 	} = props
 
+	// Drag-to-scroll for filters row
+	const filterScrollRef = React.useRef<HTMLDivElement | null>(null)
+	const isDraggingRef = React.useRef(false)
+	const didDragRef = React.useRef(false)
+	const preventClickUntilRef = React.useRef(0)
+	const startXRef = React.useRef(0)
+	const scrollLeftRef = React.useRef(0)
+
+	const onFiltersPointerDown = (e: React.PointerEvent) => {
+		if (!filterScrollRef.current) return
+		isDraggingRef.current = true
+		didDragRef.current = false
+		startXRef.current = e.clientX
+		scrollLeftRef.current = filterScrollRef.current.scrollLeft
+	}
+	const onFiltersPointerMove = (e: React.PointerEvent) => {
+		if (!filterScrollRef.current) return
+		if (!isDraggingRef.current) return
+		const dx = e.clientX - startXRef.current
+		// Only start "real drag" after small threshold so clicks still work
+		if (Math.abs(dx) > 4) {
+			didDragRef.current = true
+			preventClickUntilRef.current = Date.now() + 250
+			filterScrollRef.current.scrollLeft = scrollLeftRef.current - dx
+		}
+	}
+	const onFiltersPointerUp = (e: React.PointerEvent) => {
+		isDraggingRef.current = false
+	}
+	const onFiltersClickCapture = (e: React.MouseEvent) => {
+		// If a drag just occurred, cancel click so buttons don't trigger accidentally
+		if (Date.now() < preventClickUntilRef.current && didDragRef.current) {
+			e.preventDefault()
+			e.stopPropagation()
+		}
+	}
+
 	return (
 		<div className="relative h-screen max-h-screen overflow-hidden bg-gradient-to-br from-pink-50/80 via-rose-50/50 to-pink-100/60">
 			{onBack && (
@@ -73,6 +113,7 @@ export default function CameraPage(props: CameraPageProps) {
 			)}
 
 			<DecorBackground />
+			<DraggableDecor />
 
 			<div className="relative z-10 h-full flex flex-col items-center justify-center gap-3 p-4 md:p-6">
 				<div className="text-center animate-bounce-in">
@@ -163,11 +204,14 @@ export default function CameraPage(props: CameraPageProps) {
 									playsInline
 									muted
 									className={cn(
-										"w-full h-full object-cover transition-all duration-300",
+										"w-full h-full object-cover transition-all duration-300 -scale-x-100",
 										isCameraReady ? "opacity-100" : "opacity-0",
 										filters.find(f => f.id === selectedFilter)?.class
 									)}
 								/>
+								{shutterActive && (
+									<div className="absolute inset-0 rounded-2xl bg-white/80 animate-shutter-flash pointer-events-none" />
+								)}
 							</div>
 
 							<Sparkles className="absolute -top-3 -right-3 w-8 h-8 text-pink-400 animate-pulse animate-pop" />
@@ -186,7 +230,15 @@ export default function CameraPage(props: CameraPageProps) {
 								<Sparkles className="w-4 h-4 text-pink-400" />
 								<h3 className="text-sm font-semibold text-pink-600">Filters</h3>
 							</div>
-							<div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-hide">
+							<div
+								ref={filterScrollRef}
+								onPointerDown={onFiltersPointerDown}
+								onPointerMove={onFiltersPointerMove}
+								onPointerUp={onFiltersPointerUp}
+								onPointerCancel={onFiltersPointerUp}
+								onClickCapture={onFiltersClickCapture}
+								className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+							>
 								{filters.map((filter) => (
 									<button
 										key={filter.id}

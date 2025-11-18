@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
 import CameraPage from '@/components/CameraPage'
 import PreviewPage from '@/components/PreviewPage'
+import { getDecorLayout } from '@/components/decorLayout'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const FILTERS = [
     { id: 'none', name: 'Original', class: '' },
@@ -11,6 +12,11 @@ const FILTERS = [
     { id: 'saturate', name: 'Pop', class: 'saturate-[1.5] contrast-[1.1]' },
     { id: 'hue', name: 'Dreamy', class: 'hue-rotate-[320deg] saturate-[1.2]' },
     { id: 'warm', name: 'Warm', class: 'sepia-[0.3] saturate-[1.3] brightness-[1.05]' },
+    { id: 'noir', name: 'Noir', class: 'grayscale contrast-[1.4] brightness-[0.9]' },
+    { id: 'vivid', name: 'Vivid', class: 'saturate-[1.8] contrast-[1.15]' },
+    { id: 'cool', name: 'Cool', class: 'hue-rotate-[200deg] saturate-[1.2]' },
+    { id: 'peach', name: 'Peach', class: 'sepia-[0.1] hue-rotate-[320deg] saturate-[1.3] brightness-[1.05]' },
+    { id: 'cinematic', name: 'Cinematic', class: 'contrast-[1.3] saturate-[0.9] brightness-[0.9]' },
 ]
 
 const PHOTO_COUNTS = [2, 4, 6]
@@ -22,15 +28,18 @@ const FRAME_COLORS = [
     { id: 'lavender', name: 'Lavender', color: '#f3e8ff', border: '#d8b4fe' },
     { id: 'blue', name: 'Blue', color: '#dbeafe', border: '#93c5fd' },
     { id: 'mint', name: 'Mint', color: '#d1fae5', border: '#6ee7b7' },
+    // Added extra palette options (flat colors only)
+    { id: 'peach', name: 'Peach', color: '#ffe4e6', border: '#f9a8a8' },
+    { id: 'gold', name: 'Gold', color: '#fef3c7', border: '#facc15' },
+    { id: 'cream', name: 'Cream', color: '#fff7ed', border: '#fed7aa' },
+    { id: 'aqua', name: 'Aqua', color: '#cffafe', border: '#67e8f9' },
+    { id: 'gray', name: 'Gray', color: '#f3f4f6', border: '#d1d5db' },
 ]
 
 const STICKERS = [
-    { id: 'none', name: 'None', emoji: '' },
-    { id: 'hearts', name: 'Hearts', emoji: '💗' },
-    { id: 'stars', name: 'Stars', emoji: '⭐' },
-    { id: 'sparkles', name: 'Sparkles', emoji: '✨' },
-    { id: 'flowers', name: 'Flowers', emoji: '🌸' },
-    { id: 'butterflies', name: 'Butterfly', emoji: '🦋' },
+    { id: 'none', name: 'None' },
+    { id: 'hearts', name: 'Hearts' },
+    { id: 'flowers', name: 'Flowers' },
 ]
 
 export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
@@ -46,6 +55,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
     const [countdownDelay, setCountdownDelay] = useState(3)
     const [isCapturing, setIsCapturing] = useState(false)
     const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+    const [shutterActive, setShutterActive] = useState(false)
 
     const [view, setView] = useState<'capture' | 'preview'>('capture')
 
@@ -99,19 +109,46 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         const context = canvas.getContext('2d')
         if (context) {
             const filter = FILTERS.find(f => f.id === selectedFilter)
-            if (filter?.id === 'sepia') {
-                context.filter = 'sepia(0.8) contrast(1.1)'
-            } else if (filter?.id === 'grayscale') {
-                context.filter = 'grayscale(1) contrast(1.2)'
-            } else if (filter?.id === 'saturate') {
-                context.filter = 'saturate(1.5) contrast(1.1)'
-            } else if (filter?.id === 'hue') {
-                context.filter = 'hue-rotate(320deg) saturate(1.2)'
-            } else if (filter?.id === 'warm') {
-                context.filter = 'sepia(0.3) saturate(1.3) brightness(1.05)'
+            // Ensure captured image matches preview filter
+            switch (filter?.id) {
+                case 'sepia':
+                    context.filter = 'sepia(0.8) contrast(1.1)'
+                    break
+                case 'grayscale':
+                    context.filter = 'grayscale(1) contrast(1.2)'
+                    break
+                case 'saturate':
+                    context.filter = 'saturate(1.5) contrast(1.1)'
+                    break
+                case 'hue':
+                    context.filter = 'hue-rotate(320deg) saturate(1.2)'
+                    break
+                case 'warm':
+                    context.filter = 'sepia(0.3) saturate(1.3) brightness(1.05)'
+                    break
+                case 'noir':
+                    context.filter = 'grayscale(1) contrast(1.4) brightness(0.9)'
+                    break
+                case 'vivid':
+                    context.filter = 'saturate(1.8) contrast(1.15)'
+                    break
+                case 'cool':
+                    context.filter = 'hue-rotate(200deg) saturate(1.2)'
+                    break
+                case 'peach':
+                    context.filter = 'sepia(0.1) hue-rotate(320deg) saturate(1.3) brightness(1.05)'
+                    break
+                case 'cinematic':
+                    context.filter = 'contrast(1.3) saturate(0.9) brightness(0.9)'
+                    break
+                default:
+                    context.filter = 'none'
             }
 
             context.drawImage(video, 0, 0, canvas.width, canvas.height)
+            // trigger a subtle shutter flash after capture
+            setShutterActive(true)
+            setTimeout(() => setShutterActive(false), 180)
             return canvas.toDataURL('image/png')
         }
         return null
@@ -161,7 +198,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         setCurrentPhotoIndex(0)
     }, [isCameraReady, isCapturing, photoCount, countdownDelay, captureSinglePhoto])
 
-    const downloadPhotoStrip = useCallback(() => {
+    const downloadPhotoStrip = useCallback(async () => {
         if (capturedImages.length === 0) return
 
         const stripCanvas = document.createElement('canvas')
@@ -169,18 +206,18 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         if (!ctx) return
 
         // Export at a larger size while keeping the same proportions as the preview.
-        // Base preview outer width is 220px. Scale all paddings/spacing/fonts from that.
-        const baseOuterWidth = 220
+        // Base preview outer width is 250px. Scale all paddings/spacing/fonts from that.
+        const baseOuterWidth = 250
         const exportOuterWidth = 600 // make the downloadable strip larger
         const scale = exportOuterWidth / baseOuterWidth
 
         const outerWidth = exportOuterWidth
         const cardPadding = Math.round(12 * scale)
-        const innerPadding = 0
+        const innerPadding = Math.round(12 * scale)
         const contentWidth = outerWidth - 2 * (cardPadding + innerPadding)
         const photoWidth = contentWidth
         const photoHeight = Math.round(contentWidth * 3 / 4) // 4:3 tiles
-        const spacing = Math.round(8 * scale)
+        const spacing = Math.round(6 * scale)
         const footerHeight = Math.round(28 * scale)
 
         stripCanvas.width = outerWidth
@@ -195,7 +232,16 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         const frameColor = FRAME_COLORS.find(f => f.id === selectedFrameColor) || FRAME_COLORS[0]
 
         // Background should be the frame color so all borders (top/sides/between) are colored
-        ctx.fillStyle = frameColor.color
+        // Support gradients when provided
+        const hasGradient = (frameColor as any).gradientFrom && (frameColor as any).gradientTo
+        if (hasGradient) {
+            const grad = ctx.createLinearGradient(0, 0, stripCanvas.width, stripCanvas.height)
+            grad.addColorStop(0, (frameColor as any).gradientFrom)
+            grad.addColorStop(1, (frameColor as any).gradientTo)
+            ctx.fillStyle = grad
+        } else {
+            ctx.fillStyle = frameColor.color
+        }
         ctx.fillRect(0, 0, stripCanvas.width, stripCanvas.height)
 
         // Inner colored frame background
@@ -206,8 +252,127 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
             (innerPadding * 2) +
             (photoHeight * capturedImages.length) +
             (spacing * (capturedImages.length - 1))
-        ctx.fillStyle = frameColor.color
+        if (hasGradient) {
+            const gradInner = ctx.createLinearGradient(frameX, frameY, frameX + frameW, frameY + frameH)
+            gradInner.addColorStop(0, (frameColor as any).gradientFrom)
+            gradInner.addColorStop(1, (frameColor as any).gradientTo)
+            ctx.fillStyle = gradInner
+        } else {
+            ctx.fillStyle = frameColor.color
+        }
         ctx.fillRect(frameX, frameY, frameW, frameH)
+
+        // Preload sticker SVGs for hearts / flowers variants from /public
+        const loadImg = (src: string) =>
+            new Promise<HTMLImageElement>((resolve) => {
+                const img = new Image()
+                img.crossOrigin = 'anonymous'
+                img.src = src
+                img.onload = () => resolve(img)
+            })
+        const stickerMap: Record<string, HTMLImageElement[]> = {}
+        if (selectedSticker === 'hearts') {
+            stickerMap['hearts'] = await Promise.all(['/heart1.svg', '/heart2.svg', '/heart3.svg'].map(loadImg))
+        } else if (selectedSticker === 'flowers') {
+            stickerMap['flowers'] = await Promise.all(['/flower1.svg', '/flower2.svg', '/flower3.svg'].map(loadImg))
+        }
+
+        // Helper to draw cute stickers on the frame border (not on photos)
+        const drawCuteSticker = (x: number, y: number, size: number, kind: string, rotationDeg: number = 0) => {
+            ctx.save()
+            ctx.translate(x, y)
+            if (rotationDeg) ctx.rotate((rotationDeg * Math.PI) / 180)
+            if (kind === 'hearts') {
+                ctx.fillStyle = '#f472b6'
+                ctx.beginPath()
+                ctx.moveTo(0, size * 0.35)
+                ctx.bezierCurveTo(0, 0, size * 0.5, 0, size * 0.5, size * 0.35)
+                ctx.bezierCurveTo(size * 0.5, 0, size, 0, size, size * 0.35)
+                ctx.bezierCurveTo(size, size * 0.7, size * 0.6, size * 0.9, size * 0.5, size)
+                ctx.bezierCurveTo(size * 0.4, size * 0.9, 0, size * 0.7, 0, size * 0.35)
+                ctx.fill()
+            } else if (kind === 'bows') {
+                ctx.fillStyle = '#f9a8d4'
+                ctx.beginPath()
+                ctx.moveTo(size * 0.5, size * 0.45)
+                ctx.bezierCurveTo(size * 0.7, size * 0.1, size, size * 0.2, size, size * 0.5)
+                ctx.bezierCurveTo(size, size * 0.8, size * 0.7, size * 0.9, size * 0.5, size * 0.6)
+                ctx.bezierCurveTo(size * 0.3, size * 0.9, 0, size * 0.8, 0, size * 0.5)
+                ctx.bezierCurveTo(0, size * 0.2, size * 0.3, size * 0.1, size * 0.5, size * 0.45)
+                ctx.fill()
+                ctx.fillStyle = '#ec4899'
+                ctx.beginPath()
+                ctx.arc(size * 0.5, size * 0.52, size * 0.12, 0, Math.PI * 2)
+                ctx.fill()
+            } else if (kind === 'butterflies') {
+                ctx.fillStyle = '#fb7185'
+                ctx.beginPath()
+                ctx.moveTo(size * 0.5, size * 0.5)
+                ctx.bezierCurveTo(size * 0.1, size * 0.1, 0, size * 0.4, size * 0.2, size * 0.6)
+                ctx.bezierCurveTo(size * 0.35, size * 0.8, size * 0.5, size * 0.6, size * 0.5, size * 0.5)
+                ctx.fill()
+                ctx.fillStyle = '#f472b6'
+                ctx.beginPath()
+                ctx.moveTo(size * 0.5, size * 0.5)
+                ctx.bezierCurveTo(size * 0.9, size * 0.1, size, size * 0.4, size * 0.8, size * 0.6)
+                ctx.bezierCurveTo(size * 0.65, size * 0.8, size * 0.5, size * 0.6, size * 0.5, size * 0.5)
+                ctx.fill()
+                ctx.fillStyle = '#9d174d'
+                ctx.fillRect(size * 0.48, size * 0.45, size * 0.04, size * 0.2)
+            } else if (kind === 'flowers') {
+                const petals = 6
+                for (let i = 0; i < petals; i++) {
+                    const a = (i / petals) * Math.PI * 2
+                    ctx.fillStyle = i % 2 ? '#fb7185' : '#f472b6'
+                    ctx.beginPath()
+                    ctx.ellipse(
+                        size * 0.5 + Math.cos(a) * size * 0.22,
+                        size * 0.5 + Math.sin(a) * size * 0.22,
+                        size * 0.18,
+                        size * 0.1,
+                        a,
+                        0,
+                        Math.PI * 2
+                    )
+                    ctx.fill()
+                }
+                ctx.fillStyle = '#fda4af'
+                ctx.beginPath()
+                ctx.arc(size * 0.5, size * 0.5, size * 0.12, 0, Math.PI * 2)
+                ctx.fill()
+            } else if (kind === 'ribbons') {
+                ctx.fillStyle = '#f9a8d4'
+                ctx.beginPath()
+                ctx.moveTo(0, size * 0.3)
+                ctx.quadraticCurveTo(size * 0.35, size * 0.1, size * 0.6, size * 0.4)
+                ctx.quadraticCurveTo(size * 0.8, size * 0.6, size, size * 0.4)
+                ctx.lineTo(size * 0.85, size * 0.55)
+                ctx.quadraticCurveTo(size * 0.6, size * 0.75, size * 0.35, size * 0.45)
+                ctx.quadraticCurveTo(size * 0.15, size * 0.25, 0, size * 0.45)
+                ctx.closePath()
+                ctx.fill()
+            } else if (kind === 'pearls') {
+                // soft pink pearl with highlight and outline
+                const grad = ctx.createRadialGradient(
+                    size * 0.45, size * 0.45, size * 0.05,
+                    size * 0.5, size * 0.5, size * 0.25
+                )
+                grad.addColorStop(0, '#ffe5ee')
+                grad.addColorStop(1, '#f5a3c0')
+                ctx.fillStyle = grad
+                ctx.beginPath()
+                ctx.arc(size * 0.5, size * 0.5, size * 0.22, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.strokeStyle = '#f39bc2'
+                ctx.lineWidth = Math.max(1, size * 0.06)
+                ctx.stroke()
+                ctx.fillStyle = 'rgba(255,255,255,0.55)'
+                ctx.beginPath()
+                ctx.arc(size * 0.42, size * 0.42, size * 0.07, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            ctx.restore()
+        }
 
         // Load images
         const images = capturedImages.map(src => {
@@ -270,6 +435,57 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
                     ctx.fillStyle = frameColor.color
                     ctx.fillRect(0, footerY, outerWidth, footerHeight)
 
+                    // Draw border stickers around the frame (corners + along sides), not on photos
+                    if (selectedSticker !== 'none') {
+                        const s = selectedSticker
+                        const borderThickness = cardPadding
+                        const bandThickness = cardPadding + innerPadding // include inner padding for preview parity
+                        // base sizes limited to border band to avoid overlapping the photo
+                        const sizeCornerBase = Math.max(6, Math.round(bandThickness * 0.98))
+                        const sizeTopBase = Math.max(6, Math.round(bandThickness * 0.98))
+                        const sizeSideBase = Math.max(6, Math.round(bandThickness * 0.98))
+                        // corners centered within border band (use band center to avoid touching photo)
+                        const drawStickerImg = (img: HTMLImageElement | undefined, x: number, y: number, size: number, rot: number) => {
+                            if (img) {
+                                ctx.save()
+                                ctx.translate(x, y)
+                                if (rot) ctx.rotate((rot * Math.PI) / 180)
+                                ctx.drawImage(img, 0, 0, size, size)
+                                ctx.restore()
+                            } else {
+                                drawCuteSticker(x, y, size, s, rot)
+                            }
+                        }
+                        const bandCenter = cardPadding + (innerPadding / 2) // cardPadding + innerPadding/2
+                        drawStickerImg(stickerMap[s]?.[0], bandCenter - sizeCornerBase / 2, bandCenter - sizeCornerBase / 2, sizeCornerBase, 0)
+                        drawStickerImg(stickerMap[s]?.[1], outerWidth - bandCenter - sizeCornerBase / 2, bandCenter - sizeCornerBase / 2, sizeCornerBase, 0)
+                        drawStickerImg(stickerMap[s]?.[2], bandCenter - sizeCornerBase / 2, frameY + frameH - bandCenter - sizeCornerBase / 2, sizeCornerBase, 0)
+                        drawStickerImg(stickerMap[s]?.[1], outerWidth - bandCenter - sizeCornerBase / 2, frameY + frameH - bandCenter - sizeCornerBase / 2, sizeCornerBase, 0)
+                        // Match preview: percentage positions along edges (within border band)
+                        const layout = getDecorLayout(s)
+                        layout.forEach((pt, idx) => {
+                            if (pt.edge === 'top' || pt.edge === 'bottom') {
+                                const size = Math.min(bandThickness, Math.round(sizeTopBase * pt.sizeScale))
+                                const innerWidth = outerWidth - (bandCenter * 2) - size
+                                const x = Math.round(bandCenter + (pt.percent / 100) * innerWidth)
+                                const y = pt.edge === 'top'
+                                    ? bandCenter - size / 2
+                                    : frameY + frameH - bandCenter - size / 2
+                                const img = stickerMap[s]?.[idx % (stickerMap[s]?.length || 1)]
+                                drawStickerImg(img, x, y, size, pt.rotationDeg)
+                            } else {
+                                const size = Math.min(bandThickness, Math.round(sizeSideBase * pt.sizeScale))
+                                const innerHeight = frameH - (bandCenter * 2) - size
+                                const y = Math.round(frameY + bandCenter + (pt.percent / 100) * innerHeight)
+                                const x = pt.edge === 'left'
+                                    ? bandCenter - size / 2
+                                    : outerWidth - bandCenter - size / 2
+                                const img = stickerMap[s]?.[idx % (stickerMap[s]?.length || 1)]
+                                drawStickerImg(img, x, y, size, pt.rotationDeg)
+                            }
+                        })
+                    }
+
                     // Date only in the footer (centered), smaller and slightly lower
                     ctx.fillStyle = '#ec4899'
                     ctx.textAlign = 'center'
@@ -331,6 +547,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
                 filters={FILTERS}
                 photoCounts={PHOTO_COUNTS}
                 countdownOptions={COUNTDOWN_OPTIONS}
+                shutterActive={shutterActive}
             />
         )
     }

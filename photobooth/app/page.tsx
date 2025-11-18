@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Camera, Sparkles, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import PhotoBooth from '@/components/photobooth'
+import FallingText from '@/components/FallingText'
 
 export default function Home() {
     const [showPhotobooth, setShowPhotobooth] = useState(false)
@@ -59,6 +60,9 @@ export default function Home() {
                 <Heart className="absolute top-1/2 left-1/4 w-7 h-7 text-pink-300 animate-pulse hidden md:block" style={{ animationDelay: '2s' }} />
             </div>
 
+            {/* Soft falling love text - subtle and sparse */}
+            <FallingText />
+
             {/* Main content - centered and responsive */}
             <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
                 <div className="text-center space-y-6 sm:space-y-8 max-w-2xl mx-auto">
@@ -78,39 +82,84 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* Subtitle */}
-                    <p className="text-base sm:text-lg md:text-xl text-muted-foreground text-balance max-w-md mx-auto px-4 animate-float-up" style={{ animationDelay: '0.2s' }}>
-                        capture your moment, cherish forever
-                    </p>
-
-                    {/* CTA Button */}
-                    <div className="pt-4 sm:pt-6 animate-float-up" style={{ animationDelay: '0.4s' }}>
-                        <Button
-                            onClick={() => setShowPhotobooth(true)}
-                            size="lg"
-                            className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white shadow-2xl shadow-pink-300/60 transition-all duration-300 hover:scale-110 active:scale-95 rounded-full px-8 sm:px-12 py-6 sm:py-7 text-base sm:text-lg md:text-xl font-semibold animate-glow-pulse group"
-                        >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                            <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
-                            <span className="relative z-10">Open Photobooth</span>
-                            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 ml-2 relative z-10 group-hover:scale-125 transition-transform duration-300" />
-                        </Button>
-                    </div>
-
-                    {/* Feature badges */}
-                    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-4 sm:pt-6">
-                        <div className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-pink-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 animate-float-up" style={{ animationDelay: '0.5s' }}>
-                            <p className="text-xs sm:text-sm text-pink-600 font-medium">instant capture</p>
-                        </div>
-                        <div className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-rose-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 animate-float-up" style={{ animationDelay: '0.6s' }}>
-                            <p className="text-xs sm:text-sm text-rose-600 font-medium">download photos</p>
-                        </div>
-                        <div className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white/80 backdrop-blur-sm border border-pink-200 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 hidden sm:block animate-float-up" style={{ animationDelay: '0.7s' }}>
-                            <p className="text-xs sm:text-sm text-pink-600 font-medium">made with love</p>
+                    {/* Subtitle + CTA animate together once (same style as title) */}
+                    <div className="space-y-3 sm:space-y-4 animate-float-up">
+                        <p className="text-base sm:text-lg md:text-xl text-muted-foreground text-balance max-w-md mx-auto px-4">
+                            made especially for Theresa
+                        </p>
+                        <div className="pt-4 sm:pt-6">
+                            <Button
+                                onClick={() => setShowPhotobooth(true)}
+                                size="lg"
+                                className="relative overflow-hidden bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white shadow-2xl shadow-pink-300/60 transition-all duration-300 hover:scale-110 active:scale-95 rounded-full px-8 sm:px-12 py-6 sm:py-7 text-base sm:text-lg md:text-xl font-semibold animate-glow-pulse group"
+                            >
+                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                                <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                                <span className="relative z-10">Open Photobooth</span>
+                                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 ml-2 relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                            </Button>
                         </div>
                     </div>
+
+					
                 </div>
             </div>
+			
+			{/* Panning ribbon below hero */}
+			<div className="absolute bottom-6 left-0 right-0 z-20 px-4">
+				<div className="marquee marquee-paused rounded-full bg-white/80 backdrop-blur-sm border border-pink-200/70 shadow-lg mx-auto max-w-5xl">
+					<div className="marquee-track">
+						{/* segment 1 */}
+						<div className="marquee-segment py-3 sm:py-4">
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+						</div>
+						{/* segment 2 (duplicate for seamless loop) */}
+						<div className="marquee-segment py-3 sm:py-4">
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 fill-pink-500" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+							<Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+							<span className="text-sm sm:text-base md:text-lg font-semibold bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">theresa gwapa</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			{/* Additional photobooth-themed decorations */}
+			<div className="absolute inset-0 pointer-events-none">
+				{/* Soft beams */}
+				<div className="beam" />
+				<div className="beam beam--slow" style={{ top: '20%' }} />
+				<div className="beam beam--reverse" style={{ top: '65%' }} />
+				{/* Film edges */}
+				<div className="film-edge film-edge--top" />
+				<div className="film-edge film-edge--bottom" />
+				{/* Confetti/stickers scattered */}
+				<span className="sticker sticker--pink" style={{ top: '12%', left: '8%', animationDelay: '0s' }} />
+				<span className="sticker sticker--rose" style={{ top: '28%', left: '18%', animationDelay: '0.6s' }} />
+				<span className="sticker sticker--light" style={{ top: '42%', left: '6%', animationDelay: '1s' }} />
+				<span className="sticker sticker--pink" style={{ top: '18%', right: '10%', animationDelay: '0.3s' }} />
+				<span className="sticker sticker--rose" style={{ bottom: '22%', right: '16%', animationDelay: '0.9s' }} />
+				<span className="sticker sticker--light" style={{ bottom: '30%', left: '22%', animationDelay: '1.2s' }} />
+			</div>
         </main>
     )
 }

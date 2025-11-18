@@ -248,6 +248,170 @@
 
 /* Added scrollbar-hide utility for horizontal scrolling filters and frames */
 @layer utilities {
+  /* Falling text effect */
+  @keyframes fall-down {
+    0% {
+      transform: translateY(-120%) translateX(0) rotate(var(--tw-rotate, 0deg));
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateY(120vh) translateX(0) rotate(var(--tw-rotate, 0deg));
+      opacity: 0;
+    }
+  }
+  .falling-text {
+    position: absolute;
+    white-space: nowrap;
+    pointer-events: none;
+    animation-name: fall-down;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    text-shadow: 0 2px 8px rgba(236,72,153,0.25);
+  }
+  .vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  /* Subtle camera shutter flash */
+  @keyframes shutter-flash {
+    0% { opacity: 0; }
+    20% { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+  .animate-shutter-flash {
+    animation: shutter-flash 180ms ease-out 1;
+  }
+  /* Smooth infinite marquee for landing ribbon */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .marquee-track {
+    display: inline-flex;
+    width: max-content; /* shrink to content width to avoid trailing gaps */
+    animation: marquee 18s linear infinite;
+  }
+
+  .marquee-paused:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  .marquee-segment {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* tighter spacing for denser fill */
+    white-space: nowrap;
+  }
+
+  /* Photobooth-themed decorative chips */
+  .mini-frame {
+    width: 18px;
+    height: 14px;
+    border-radius: 4px;
+    background-image: linear-gradient(to bottom right, rgba(236,72,153,0.95), rgba(244,114,182,0.9));
+    border: 1px solid rgba(244,114,182,0.6);
+    box-shadow: 0 2px 8px rgba(236,72,153,0.25);
+  }
+
+  .mini-frame--light {
+    background-image: linear-gradient(to bottom right, rgba(255,255,255,0.95), rgba(253,242,248,0.9));
+    border: 1px solid rgba(244,114,182,0.35);
+    box-shadow: 0 2px 8px rgba(236,72,153,0.18);
+  }
+
+  /* Tiny vertical photo-strip chip */
+  .photo-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+    width: 14px;
+    height: 20px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(244,114,182,0.5);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(236,72,153,0.18);
+  }
+  .photo-strip > span {
+    flex: 1 0 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(253,242,248,0.9));
+    border: 1px solid rgba(244,114,182,0.35);
+    border-radius: 2px;
+  }
+  .photo-strip--pink {
+    background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(244,114,182,0.12));
+    border-color: rgba(236,72,153,0.45);
+    box-shadow: 0 2px 10px rgba(236,72,153,0.22);
+  }
+
+  /* Photobooth decor: soft beams, film edges, confetti/stickers */
+  @keyframes beam-drift {
+    0% { transform: translateX(-10%) rotate(10deg); opacity: 0.25; }
+    50% { transform: translateX(10%) rotate(10deg); opacity: 0.35; }
+    100% { transform: translateX(-10%) rotate(10deg); opacity: 0.25; }
+  }
+  .beam {
+    position: absolute;
+    left: -20%;
+    right: -20%;
+    top: 35%;
+    height: 140px;
+    background: linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.18), rgba(244,114,182,0));
+    filter: blur(18px);
+    opacity: 0.3;
+    animation: beam-drift 9s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .beam--slow { animation-duration: 14s; }
+  .beam--reverse { animation-direction: reverse; }
+
+  .film-edge {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 18px;
+    background:
+      radial-gradient(circle at 12px 50%, rgba(255,255,255,0.95) 6px, rgba(255,255,255,0) 7px) 0 0 / 48px 100% repeat-x,
+      linear-gradient(to right, rgba(236,72,153,0.12), rgba(244,114,182,0.12));
+    border-top: 1px solid rgba(244,114,182,0.35);
+    border-bottom: 1px solid rgba(244,114,182,0.35);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .film-edge--bottom { bottom: 0; }
+  .film-edge--top { top: 0; }
+
+  @keyframes confetti-float {
+    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
+    50% { transform: translateY(-8px) translateX(6px) rotate(8deg); opacity: 1; }
+    100% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
+  }
+  .sticker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(236,72,153,0.25);
+    animation: confetti-float 4.5s ease-in-out infinite;
+  }
+  .sticker--pink { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .sticker--rose { background: linear-gradient(135deg, #fb7185, #fda4af); }
+  .sticker--light { background: linear-gradient(135deg, #fff, #fde8f3); border: 1px solid rgba(244,114,182,0.4); }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
