@@ -34,6 +34,7 @@ type CameraPageProps = {
 	filters: Filter[]
 	photoCounts: number[]
 	countdownOptions: number[]
+	iosRotationFix: { active: boolean; scale: number }
 }
 
 export default function CameraPage(props: CameraPageProps) {
@@ -61,6 +62,7 @@ export default function CameraPage(props: CameraPageProps) {
 		filters,
 		photoCounts,
 		countdownOptions,
+		iosRotationFix,
 	} = props
 
 	// Drag-to-scroll for filters row
@@ -262,10 +264,19 @@ export default function CameraPage(props: CameraPageProps) {
 									playsInline
 									muted
 									className={cn(
-										"w-full h-full object-cover transition-all duration-300 -scale-x-100",
+										"w-full h-full object-cover transition-all duration-300",
+										!iosRotationFix.active && "-scale-x-100",
 										isCameraReady ? "opacity-100" : "opacity-0",
 										filters.find(f => f.id === selectedFilter)?.class
 									)}
+									style={
+										iosRotationFix.active
+											? {
+													transform: `rotate(90deg) scale(${iosRotationFix.scale}) scaleX(-1)`,
+													transformOrigin: 'center center',
+											  }
+											: undefined
+									}
 								/>
 								{shutterActive && (
 									<div className="absolute inset-0 rounded-2xl bg-white/80 animate-shutter-flash pointer-events-none" />

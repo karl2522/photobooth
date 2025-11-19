@@ -61,6 +61,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
 
     const [selectedFrameColor, setSelectedFrameColor] = useState('white')
     const [selectedSticker, setSelectedSticker] = useState('none')
+    const [iosRotationFix, setIosRotationFix] = useState({ active: false, scale: 1 })
 
     const startCamera = useCallback(async () => {
         setIsLoading(true)
@@ -103,8 +104,14 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         const video = videoRef.current
         const canvas = canvasRef.current
 
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
+        const shouldRotate = iosRotationFix.active && video.videoHeight > video.videoWidth
+        if (shouldRotate) {
+            canvas.width = video.videoHeight
+            canvas.height = video.videoWidth
+        } else {
+            canvas.width = video.videoWidth
+            canvas.height = video.videoHeight
+        }
 
         const context = canvas.getContext('2d')
         if (context) {
@@ -149,7 +156,15 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
             context.save()
             context.translate(canvas.width, 0)
             context.scale(-1, 1)
-            context.drawImage(video, 0, 0, canvas.width, canvas.height)
+            if (shouldRotate) {
+                context.save()
+                context.translate(canvas.width / 2, canvas.height / 2)
+                context.rotate((-90 * Math.PI) / 180)
+                context.drawImage(video, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width)
+                context.restore()
+            } else {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height)
+            }
             context.restore()
             // trigger a subtle shutter flash after capture
             setShutterActive(true)
@@ -157,7 +172,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
             return canvas.toDataURL('image/png')
         }
         return null
-    }, [isCameraReady, selectedFilter])
+    }, [isCameraReady, selectedFilter, iosRotationFix])
 
     const startPhotoSequence = useCallback(async () => {
         if (!isCameraReady || isCapturing) return
@@ -539,6 +554,51 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
         }
     }, [stopCamera])
 
+    useEffect(() => {
+        if (!isCameraReady) {
+            if (iosRotationFix.active) {
+                setIosRotationFix({ active: false, scale: 1 })
+            }
+            return
+        }
+
+        if (typeof window === 'undefined') return
+        const nav = window.navigator as Navigator & { standalone?: boolean }
+        const isStandalone = nav.standalone === true
+        const ua = window.navigator.userAgent
+        const isIPad = /iPad|Macintosh/.test(ua) && 'ontouchend' in document
+
+        if (!isStandalone || !isIPad) {
+            if (iosRotationFix.active) {
+                setIosRotationFix({ active: false, scale: 1 })
+            }
+            return
+        }
+
+        const video = videoRef.current
+        if (!video) return
+
+        let raf: number
+        const checkOrientation = () => {
+            if (!video.videoWidth || !video.videoHeight) {
+                raf = window.requestAnimationFrame(checkOrientation)
+                return
+            }
+            const rotated = video.videoHeight > video.videoWidth
+            if (rotated) {
+                const scale = video.videoHeight / video.videoWidth
+                setIosRotationFix({ active: true, scale })
+            } else if (iosRotationFix.active) {
+                setIosRotationFix({ active: false, scale: 1 })
+            }
+        }
+
+        raf = window.requestAnimationFrame(checkOrientation)
+        return () => {
+            window.cancelAnimationFrame(raf)
+        }
+    }, [isCameraReady, iosRotationFix.active, stopCamera])
+
 
 
 
@@ -570,6 +630,7 @@ export default function PhotoBooth({ onBack }: { onBack?: () => void }) {
                 photoCounts={PHOTO_COUNTS}
                 countdownOptions={COUNTDOWN_OPTIONS}
                 shutterActive={shutterActive}
+            iosRotationFix={iosRotationFix}
             />
         )
     }
